@@ -130,7 +130,9 @@ public class AutoButtonTester : MonoBehaviour
         Text txt = txtObj.AddComponent<Text>();
         txt.text = label;
         txt.alignment = TextAnchor.MiddleCenter;
+
         txt.color = Color.black;
+
         txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         RectTransform trt = txt.GetComponent<RectTransform>();
         trt.anchorMin = Vector2.zero;
