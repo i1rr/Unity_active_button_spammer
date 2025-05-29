@@ -94,6 +94,7 @@ public class AutoButtonTester : MonoBehaviour
         }
     }
 
+
     private void CreateRuntimeCanvas()
     {
         testerCanvas = new GameObject("AutoTesterCanvas").AddComponent<Canvas>();
@@ -153,6 +154,7 @@ public class AutoButtonTester : MonoBehaviour
         txt.alignment = TextAnchor.UpperLeft;
         txt.text = initial;
         txt.color = Color.white;
+
         RectTransform rt = txt.GetComponent<RectTransform>();
         rt.sizeDelta = new Vector2(280, 60);
         rt.anchoredPosition = pos;
@@ -185,6 +187,9 @@ public class AutoButtonTester : MonoBehaviour
     {
         while (isTesting)
         {
+            cachedButtons.RemoveAll(b => b == null);
+
+
             if (cachedButtons.Count == 0)
             {
                 UpdateCachedButtons();
@@ -203,11 +208,23 @@ public class AutoButtonTester : MonoBehaviour
 
     private void UpdateCachedButtons()
     {
+
+        cachedButtons.RemoveAll(b => b == null);
+        List<Collider2DButton> toRemove = new List<Collider2DButton>();
+        foreach (var kvp in pressCounts)
+        {
+            if (kvp.Key == null)
+                toRemove.Add(kvp.Key);
+        }
+        foreach (var k in toRemove)
+            pressCounts.Remove(k);
+
         cachedButtons.Clear();
         Collider2DButton[] allButtons = FindObjectsOfType<Collider2DButton>(true);
+
         foreach (var b in allButtons)
         {
-            if (b == null) continue;
+
             if (!IsButtonOnTesterUI(b) && IsButtonPressable(b))
             {
                 cachedButtons.Add(b);
@@ -224,7 +241,9 @@ public class AutoButtonTester : MonoBehaviour
 
     private bool IsButtonPressable(Collider2DButton button)
     {
-        if (button == null) return false;
+
+        if (button == null || !button) return false;
+
         if (!button.gameObject.activeInHierarchy) return false;
         Collider2D collider = button.GetComponent<Collider2D>();
         if (collider == null || !collider.enabled) return false;
@@ -242,14 +261,12 @@ public class AutoButtonTester : MonoBehaviour
 
     private Collider2DButton GetRandomPressableButton()
     {
+
+        cachedButtons.RemoveAll(b => b == null);
+
         for (int attempts = 0; attempts < cachedButtons.Count; attempts++)
         {
             var b = cachedButtons[Random.Range(0, cachedButtons.Count)];
-            if (b == null)
-            {
-                cachedButtons.Remove(b);
-                continue;
-            }
             if (IsButtonPressable(b))
             {
                 return b;
@@ -271,6 +288,7 @@ public class AutoButtonTester : MonoBehaviour
         ExecuteEvents.Execute(button.gameObject, eventData, ExecuteEvents.pointerUpHandler);
         ExecuteEvents.Execute(button.gameObject, eventData, ExecuteEvents.pointerClickHandler);
 
+
         if (Time.time >= nextStatUpdate)
         {
             nextStatUpdate = Time.time + 5f;
@@ -287,5 +305,4 @@ public class AutoButtonTester : MonoBehaviour
         }
     }
 }
-
 
