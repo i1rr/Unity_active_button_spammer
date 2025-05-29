@@ -90,6 +90,7 @@ public class AutoButtonTester : MonoBehaviour
         testerCanvas.gameObject.AddComponent<CanvasScaler>();
         testerCanvas.gameObject.AddComponent<GraphicRaycaster>();
 
+
         GameObject panelObj = new GameObject("Panel");
         panelObj.transform.SetParent(testerCanvas.transform, false);
         Image panel = panelObj.AddComponent<Image>();
@@ -123,6 +124,9 @@ public class AutoButtonTester : MonoBehaviour
         Text txt = txtObj.AddComponent<Text>();
         txt.text = label;
         txt.alignment = TextAnchor.MiddleCenter;
+
+        txt.color = Color.black;
+
         txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         RectTransform trt = txt.GetComponent<RectTransform>();
         trt.anchorMin = Vector2.zero;
@@ -173,6 +177,7 @@ public class AutoButtonTester : MonoBehaviour
         while (isTesting)
         {
             cachedButtons.RemoveAll(b => b == null);
+
             if (cachedButtons.Count == 0)
             {
                 UpdateCachedButtons();
@@ -203,6 +208,7 @@ public class AutoButtonTester : MonoBehaviour
 
         cachedButtons.Clear();
         Collider2DButton[] allButtons = FindObjectsOfType<Collider2DButton>(true);
+
         foreach (var b in allButtons)
         {
             if (!IsButtonOnTesterUI(b) && IsButtonPressable(b))
@@ -222,6 +228,7 @@ public class AutoButtonTester : MonoBehaviour
     private bool IsButtonPressable(Collider2DButton button)
     {
         if (button == null || !button) return false;
+
         if (!button.gameObject.activeInHierarchy) return false;
         Collider2D collider = button.GetComponent<Collider2D>();
         if (collider == null || !collider.enabled) return false;
@@ -240,6 +247,7 @@ public class AutoButtonTester : MonoBehaviour
     private Collider2DButton GetRandomPressableButton()
     {
         cachedButtons.RemoveAll(b => b == null);
+
         for (int attempts = 0; attempts < cachedButtons.Count; attempts++)
         {
             var b = cachedButtons[Random.Range(0, cachedButtons.Count)];
@@ -267,6 +275,7 @@ public class AutoButtonTester : MonoBehaviour
         if (button != null)
             button.SendMessage("OnPointerUp", SendMessageOptions.DontRequireReceiver);
 
+
         if (Time.time >= nextStatUpdate)
         {
             nextStatUpdate = Time.time + 5f;
@@ -283,4 +292,3 @@ public class AutoButtonTester : MonoBehaviour
         }
     }
 }
-
