@@ -90,6 +90,13 @@ public class AutoButtonTester : MonoBehaviour
         testerCanvas.gameObject.AddComponent<CanvasScaler>();
         testerCanvas.gameObject.AddComponent<GraphicRaycaster>();
 
+        if (FindObjectOfType<EventSystem>() == null)
+        {
+            GameObject esObj = new GameObject("EventSystem");
+            esObj.AddComponent<EventSystem>();
+            esObj.AddComponent<StandaloneInputModule>();
+        }
+
         GameObject panelObj = new GameObject("Panel");
         panelObj.transform.SetParent(testerCanvas.transform, false);
         Image panel = panelObj.AddComponent<Image>();
@@ -123,6 +130,9 @@ public class AutoButtonTester : MonoBehaviour
         Text txt = txtObj.AddComponent<Text>();
         txt.text = label;
         txt.alignment = TextAnchor.MiddleCenter;
+
+        txt.color = Color.black;
+
         txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         RectTransform trt = txt.GetComponent<RectTransform>();
         trt.anchorMin = Vector2.zero;
