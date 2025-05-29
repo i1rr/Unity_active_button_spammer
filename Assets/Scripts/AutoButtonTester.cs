@@ -90,12 +90,6 @@ public class AutoButtonTester : MonoBehaviour
         testerCanvas.gameObject.AddComponent<CanvasScaler>();
         testerCanvas.gameObject.AddComponent<GraphicRaycaster>();
 
-        if (FindObjectOfType<EventSystem>() == null)
-        {
-            GameObject esObj = new GameObject("EventSystem");
-            esObj.AddComponent<EventSystem>();
-            esObj.AddComponent<StandaloneInputModule>();
-        }
 
         GameObject panelObj = new GameObject("Panel");
         panelObj.transform.SetParent(testerCanvas.transform, false);
@@ -182,6 +176,8 @@ public class AutoButtonTester : MonoBehaviour
     {
         while (isTesting)
         {
+            cachedButtons.RemoveAll(b => b == null);
+
             if (cachedButtons.Count == 0)
             {
                 UpdateCachedButtons();
@@ -200,8 +196,19 @@ public class AutoButtonTester : MonoBehaviour
 
     private void UpdateCachedButtons()
     {
+        cachedButtons.RemoveAll(b => b == null);
+        List<Collider2DButton> toRemove = new List<Collider2DButton>();
+        foreach (var kvp in pressCounts)
+        {
+            if (kvp.Key == null)
+                toRemove.Add(kvp.Key);
+        }
+        foreach (var k in toRemove)
+            pressCounts.Remove(k);
+
         cachedButtons.Clear();
-        Collider2DButton[] allButtons = FindObjectsOfType<Collider2DButton>();
+        Collider2DButton[] allButtons = FindObjectsOfType<Collider2DButton>(true);
+
         foreach (var b in allButtons)
         {
             if (!IsButtonOnTesterUI(b) && IsButtonPressable(b))
@@ -220,6 +227,8 @@ public class AutoButtonTester : MonoBehaviour
 
     private bool IsButtonPressable(Collider2DButton button)
     {
+        if (button == null || !button) return false;
+
         if (!button.gameObject.activeInHierarchy) return false;
         Collider2D collider = button.GetComponent<Collider2D>();
         if (collider == null || !collider.enabled) return false;
@@ -237,6 +246,8 @@ public class AutoButtonTester : MonoBehaviour
 
     private Collider2DButton GetRandomPressableButton()
     {
+        cachedButtons.RemoveAll(b => b == null);
+
         for (int attempts = 0; attempts < cachedButtons.Count; attempts++)
         {
             var b = cachedButtons[Random.Range(0, cachedButtons.Count)];
@@ -252,12 +263,18 @@ public class AutoButtonTester : MonoBehaviour
     {
         if (button == null) yield break;
 
+        if (!pressCounts.ContainsKey(button))
+            pressCounts[button] = 0;
+
         // Simulate pointer down/up on button's collider
         pressCounts[button]++;
         float pressTime = pressDuration * Random.Range(1f - randomness, 1f + randomness);
-        button.SendMessage("OnPointerDown", SendMessageOptions.DontRequireReceiver);
+        if (button != null)
+            button.SendMessage("OnPointerDown", SendMessageOptions.DontRequireReceiver);
         yield return new WaitForSeconds(pressTime);
-        button.SendMessage("OnPointerUp", SendMessageOptions.DontRequireReceiver);
+        if (button != null)
+            button.SendMessage("OnPointerUp", SendMessageOptions.DontRequireReceiver);
+
 
         if (Time.time >= nextStatUpdate)
         {
@@ -275,14 +292,3 @@ public class AutoButtonTester : MonoBehaviour
         }
     }
 }
-
-/// <summary>
-/// Placeholder base class for 2D buttons expected in the scene.
-/// Replace this with the project's actual button implementation if available.
-/// </summary>
-public class Collider2DButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
-{
-    public void OnPointerDown(PointerEventData eventData) { }
-    public void OnPointerUp(PointerEventData eventData) { }
-}
-
