@@ -44,6 +44,7 @@ public class AutoButtonTester : MonoBehaviour
         }
         stopButton.gameObject.SetActive(false);
         testerCanvas.gameObject.SetActive(false);
+        EnsureEventSystemExists();
     }
 
     private void Update()
@@ -83,13 +84,23 @@ public class AutoButtonTester : MonoBehaviour
         testerCanvas.gameObject.SetActive(!testerCanvas.gameObject.activeSelf);
     }
 
+    private void EnsureEventSystemExists()
+    {
+        if (FindObjectOfType<EventSystem>() == null)
+        {
+            GameObject es = new GameObject("EventSystem");
+            es.AddComponent<EventSystem>();
+            es.AddComponent<StandaloneInputModule>();
+        }
+    }
+
+
     private void CreateRuntimeCanvas()
     {
         testerCanvas = new GameObject("AutoTesterCanvas").AddComponent<Canvas>();
         testerCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
         testerCanvas.gameObject.AddComponent<CanvasScaler>();
         testerCanvas.gameObject.AddComponent<GraphicRaycaster>();
-
 
         GameObject panelObj = new GameObject("Panel");
         panelObj.transform.SetParent(testerCanvas.transform, false);
@@ -124,10 +135,8 @@ public class AutoButtonTester : MonoBehaviour
         Text txt = txtObj.AddComponent<Text>();
         txt.text = label;
         txt.alignment = TextAnchor.MiddleCenter;
-
-        txt.color = Color.black;
-
         txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        txt.color = Color.black;
         RectTransform trt = txt.GetComponent<RectTransform>();
         trt.anchorMin = Vector2.zero;
         trt.anchorMax = Vector2.one;
@@ -144,6 +153,8 @@ public class AutoButtonTester : MonoBehaviour
         txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         txt.alignment = TextAnchor.UpperLeft;
         txt.text = initial;
+        txt.color = Color.white;
+
         RectTransform rt = txt.GetComponent<RectTransform>();
         rt.sizeDelta = new Vector2(280, 60);
         rt.anchoredPosition = pos;
@@ -178,6 +189,7 @@ public class AutoButtonTester : MonoBehaviour
         {
             cachedButtons.RemoveAll(b => b == null);
 
+
             if (cachedButtons.Count == 0)
             {
                 UpdateCachedButtons();
@@ -196,6 +208,7 @@ public class AutoButtonTester : MonoBehaviour
 
     private void UpdateCachedButtons()
     {
+
         cachedButtons.RemoveAll(b => b == null);
         List<Collider2DButton> toRemove = new List<Collider2DButton>();
         foreach (var kvp in pressCounts)
@@ -211,6 +224,7 @@ public class AutoButtonTester : MonoBehaviour
 
         foreach (var b in allButtons)
         {
+
             if (!IsButtonOnTesterUI(b) && IsButtonPressable(b))
             {
                 cachedButtons.Add(b);
@@ -227,6 +241,7 @@ public class AutoButtonTester : MonoBehaviour
 
     private bool IsButtonPressable(Collider2DButton button)
     {
+
         if (button == null || !button) return false;
 
         if (!button.gameObject.activeInHierarchy) return false;
@@ -246,6 +261,7 @@ public class AutoButtonTester : MonoBehaviour
 
     private Collider2DButton GetRandomPressableButton()
     {
+
         cachedButtons.RemoveAll(b => b == null);
 
         for (int attempts = 0; attempts < cachedButtons.Count; attempts++)
@@ -263,17 +279,14 @@ public class AutoButtonTester : MonoBehaviour
     {
         if (button == null) yield break;
 
-        if (!pressCounts.ContainsKey(button))
-            pressCounts[button] = 0;
-
-        // Simulate pointer down/up on button's collider
         pressCounts[button]++;
         float pressTime = pressDuration * Random.Range(1f - randomness, 1f + randomness);
-        if (button != null)
-            button.SendMessage("OnPointerDown", SendMessageOptions.DontRequireReceiver);
+
+        var eventData = new PointerEventData(EventSystem.current);
+        ExecuteEvents.Execute(button.gameObject, eventData, ExecuteEvents.pointerDownHandler);
         yield return new WaitForSeconds(pressTime);
-        if (button != null)
-            button.SendMessage("OnPointerUp", SendMessageOptions.DontRequireReceiver);
+        ExecuteEvents.Execute(button.gameObject, eventData, ExecuteEvents.pointerUpHandler);
+        ExecuteEvents.Execute(button.gameObject, eventData, ExecuteEvents.pointerClickHandler);
 
 
         if (Time.time >= nextStatUpdate)
@@ -292,3 +305,4 @@ public class AutoButtonTester : MonoBehaviour
         }
     }
 }
+
